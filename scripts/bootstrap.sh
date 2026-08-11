@@ -60,5 +60,5 @@ sshd -T | grep -Ei 'passwordauthentication|permitrootlogin'
 Bloc 6 : récupération du projet et premier déploiement
 ============================================
 
-git clone <URL_DE_TON_REPO> /opt/infra
+git clone https://github.com/hamzaballa05/infra-radmotech.git/opt/infra
 cd /opt/infra/docker && docker compose up -d
