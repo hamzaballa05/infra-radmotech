@@ -1,21 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-============================================
-Bloc 1 : gestion des erreurs (déjà en tête)
-============================================
-============================================
-Bloc 2 : mise à jour du système
-============================================
-
+# --- Bloc 2 : mise a jour du systeme ---
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get upgrade -y
 
-============================================
-Bloc 3 : installation de Docker (dépôt officiel + clé GPG)
-============================================
-
+# --- Bloc 3 : installation de Docker (depot officiel + cle GPG) ---
 apt-get install -y ca-certificates curl gnupg git
 
 install -m 0755 -d /etc/apt/keyrings
@@ -29,10 +20,7 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 systemctl enable docker
 systemctl start docker
 
-============================================
-Bloc 4 : pare-feu interne (UFW)
-============================================
-
+# --- Bloc 4 : pare-feu interne (UFW) ---
 apt-get install -y ufw
 ufw default deny incoming
 ufw default allow outgoing
@@ -40,25 +28,24 @@ ufw allow OpenSSH
 ufw allow 80/tcp
 ufw --force enable
 
-============================================
-Bloc 5 : durcissement SSH
-============================================
-
+# --- Bloc 5 : durcissement SSH ---
 sed -Ei 's/^#?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -Ei 's/^#?[[:space:]]*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 
+# Neutraliser le reglage cloud-init s'il existe
 if [ -f /etc/ssh/sshd_config.d/50-cloud-init.conf ]; then
     sed -Ei 's/^#?[[:space:]]*PasswordAuthentication.*/PasswordAuthentication no/' \
         /etc/ssh/sshd_config.d/50-cloud-init.conf
 fi
 
+# Fix : dossier de separation de privileges de sshd, pas toujours recree
+mkdir -p /run/sshd
+chmod 0755 /run/sshd
+
 sshd -t
 systemctl restart ssh
 sshd -T | grep -Ei 'passwordauthentication|permitrootlogin'
 
-============================================
-Bloc 6 : récupération du projet et premier déploiement
-============================================
-
+# --- Bloc 6 : recuperation du projet et premier deploiement ---
 git clone https://github.com/hamzaballa05/infra-radmotech.git/opt/infra
 cd /opt/infra/docker && docker compose up -d
