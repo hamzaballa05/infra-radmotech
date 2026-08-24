@@ -1,12 +1,11 @@
 services:
   app:
-    image: nginx:1.27-alpine
+    build:
+      context: ../app
     restart: always
-    volumes:
-      - ../app:/usr/share/nginx/html:ro
 
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46
     restart: always
     ports:
       - "80:80"
