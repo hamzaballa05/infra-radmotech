@@ -47,5 +47,5 @@ systemctl restart ssh
 sshd -T | grep -Ei 'passwordauthentication|permitrootlogin'
 
 # --- Bloc 6 : recuperation du projet et premier deploiement ---
-git clone https://github.com/hamzaballa05/infra-radmotech.git/opt/infra
+git clone https://github.com/hamzaballa05/infra-radmotech.git /opt/infra
 cd /opt/infra/docker && docker compose up -d

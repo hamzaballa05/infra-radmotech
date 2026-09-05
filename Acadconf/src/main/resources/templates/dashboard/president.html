@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('AcadConf – Président')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('dashboard')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<!-- Main -->
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-container_max_width mx-auto">
+<div class="mb-8 flex justify-between items-end">
+<div>
+<h2 class="font-h1 text-h1 text-primary">Vue d'ensemble</h2>
+<p class="text-body-base text-on-surface-variant mt-1">Supervision globale de vos conférences.</p>
+</div>
+<a th:href="@{/conferences/new}" class="bg-primary text-on-primary px-4 py-2 rounded-lg font-h3 text-h3 flex items-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+Nouvelle conférence
+</a>
+</div>
+<!-- Conferences table -->
+<div class="bg-surface border border-outline-variant/60 rounded-xl overflow-hidden flex flex-col">
+<div class="px-5 py-4 border-b border-outline-variant/50 flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-h2 text-h2 text-primary">Mes Conférences</h3>
+<a th:href="@{/conferences}" class="text-body-sm font-medium text-primary hover:underline">Voir tout</a>
+</div>
+<div th:if="${conferences.empty}" class="p-8 text-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[48px] block mb-2">event_busy</span>
+<p>Aucune conférence créée.</p>
+<a th:href="@{/conferences/new}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-h3 text-h3">
+<span class="material-symbols-outlined text-[18px]">add</span>Créer maintenant
+</a>
+</div>
+<div class="overflow-x-auto" th:unless="${conferences.empty}">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant text-body-sm text-on-surface-variant">
+<tr>
+<th class="px-5 py-3 font-medium">Titre</th>
+<th class="px-5 py-3 font-medium">Sigle</th>
+<th class="px-5 py-3 font-medium">Deadline soumission</th>
+<th class="px-5 py-3 font-medium">Statut</th>
+<th class="px-5 py-3 font-medium text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-data-tabular">
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low/50 h-12 transition-colors"
+    th:each="c : ${conferences}">
+<td class="px-5 py-2 font-medium text-on-surface" th:text="${c.titre}">Titre</td>
+<td class="px-5 py-2 text-on-surface-variant" th:text="${c.sigle}">Sigle</td>
+<td class="px-5 py-2 text-on-surface-variant" th:text="${#temporals.format(c.dateLimiteSoumission,'dd MMM yyyy')}">—</td>
+<td class="px-5 py-2">
+<span th:switch="${c.statut.name()}">
+<span th:case="'OUVERTE'" class="inline-flex items-center px-2 py-1 rounded bg-[#e6f4ea] text-[#137333] font-label-caps text-label-caps">OUVERTE</span>
+<span th:case="'EN_EVALUATION'" class="inline-flex items-center px-2 py-1 rounded bg-[#fef7e0] text-[#b06000] font-label-caps text-label-caps">EN ÉVALUATION</span>
+<span th:case="'FERMEE'" class="inline-flex items-center px-2 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps">FERMÉE</span>
+<span th:case="'TERMINEE'" class="inline-flex items-center px-2 py-1 rounded bg-error-container text-on-error-container font-label-caps text-label-caps">TERMINÉE</span>
+</span>
+</td>
+<td class="px-5 py-2 text-right flex items-center justify-end gap-2">
+<a th:href="@{/conferences/{id}(id=${c.id})}" class="text-primary hover:bg-primary-fixed/30 p-1.5 rounded transition-colors" title="Détails">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</a>
+<a th:href="@{/affectations/{id}(id=${c.id})}" class="text-primary hover:bg-primary-fixed/30 p-1.5 rounded transition-colors" title="Affecter relecteurs">
+<span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+</a>
+<a th:href="@{/conferences/{id}/edit(id=${c.id})}" class="text-primary hover:bg-primary-fixed/30 p-1.5 rounded transition-colors" title="Modifier">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

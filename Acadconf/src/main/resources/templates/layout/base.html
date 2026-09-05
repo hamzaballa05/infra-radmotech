@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pageTitle != null ? pageTitle + ' — AcadConf' : 'AcadConf'}">AcadConf</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="d-flex" id="wrapper">
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white">
+        <a href="/" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+            <i class="bi bi-mortarboard-fill fs-4 me-2"></i>
+            <span class="fs-5 fw-bold">AcadConf</span>
+        </a>
+        <hr/>
+
+        <!-- User info -->
+        <div class="mb-3 text-center">
+            <div class="user-avatar mb-1">
+                <i class="bi bi-person-circle fs-1"></i>
+            </div>
+            <div class="small fw-semibold" sec:authentication="name">Utilisateur</div>
+            <span class="badge role-badge" sec:authorize="hasRole('ADMIN')">Administrateur</span>
+            <span class="badge role-badge" sec:authorize="hasRole('PRESIDENT')">Président</span>
+            <span class="badge role-badge" sec:authorize="hasRole('AUTEUR')">Auteur</span>
+            <span class="badge role-badge" sec:authorize="hasRole('RELECTEUR')">Relecteur</span>
+            <span class="badge role-badge" sec:authorize="hasRole('COMITE')">Comité</span>
+        </div>
+        <hr/>
+
+        <!-- Navigation -->
+        <ul class="nav nav-pills flex-column mb-auto">
+            <!-- Admin -->
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/users}" class="nav-link text-white" th:classappend="${currentPage == 'users' ? ' active' : ''}">
+                    <i class="bi bi-people me-2"></i>Utilisateurs
+                </a>
+            </li>
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/conferences}" class="nav-link text-white" th:classappend="${currentPage == 'conferences' ? ' active' : ''}">
+                    <i class="bi bi-calendar-event me-2"></i>Conférences
+                </a>
+            </li>
+
+            <!-- President -->
+            <li sec:authorize="hasRole('PRESIDENT')">
+                <a th:href="@{/dashboard/president}" class="nav-link text-white" th:classappend="${currentPage == 'dashboard' ? ' active' : ''}">
+                    <i class="bi bi-house me-2"></i>Accueil
+                </a>
+            </li>
+            <li sec:authorize="hasRole('PRESIDENT')">
+                <a th:href="@{/conferences}" class="nav-link text-white" th:classappend="${currentPage == 'conferences' ? ' active' : ''}">
+                    <i class="bi bi-calendar-event me-2"></i>Mes Conférences
+                </a>
+            </li>
+            <li sec:authorize="hasRole('PRESIDENT')">
+                <a th:href="@{/conferences/new}" class="nav-link text-white">
+                    <i class="bi bi-plus-circle me-2"></i>Nouvelle Conférence
+                </a>
+            </li>
+
+            <!-- Auteur -->
+            <li sec:authorize="hasRole('AUTEUR')">
+                <a th:href="@{/dashboard/auteur}" class="nav-link text-white" th:classappend="${currentPage == 'dashboard' ? ' active' : ''}">
+                    <i class="bi bi-house me-2"></i>Accueil
+                </a>
+            </li>
+            <li sec:authorize="hasRole('AUTEUR')">
+                <a th:href="@{/articles/my}" class="nav-link text-white" th:classappend="${currentPage == 'mes-articles' ? ' active' : ''}">
+                    <i class="bi bi-file-earmark-text me-2"></i>Mes Articles
+                </a>
+            </li>
+            <li sec:authorize="hasRole('AUTEUR')">
+                <a th:href="@{/articles/submit}" class="nav-link text-white" th:classappend="${currentPage == 'submit' ? ' active' : ''}">
+                    <i class="bi bi-upload me-2"></i>Soumettre un Article
+                </a>
+            </li>
+
+            <!-- Relecteur -->
+            <li sec:authorize="hasRole('RELECTEUR')">
+                <a th:href="@{/dashboard/relecteur}" class="nav-link text-white" th:classappend="${currentPage == 'dashboard' ? ' active' : ''}">
+                    <i class="bi bi-house me-2"></i>Accueil
+                </a>
+            </li>
+            <li sec:authorize="hasRole('RELECTEUR')">
+                <a th:href="@{/evaluations/my}" class="nav-link text-white" th:classappend="${currentPage == 'evaluations' ? ' active' : ''}">
+                    <i class="bi bi-clipboard-check me-2"></i>Mes Évaluations
+                </a>
+            </li>
+
+            <!-- Commun -->
+            <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/conferences}" class="nav-link text-white" sec:authorize="!hasRole('AUTEUR') and !hasRole('RELECTEUR')" th:classappend="${currentPage == 'conferences' ? ' active' : ''}">
+                    <i class="bi bi-journal-richtext me-2"></i>Conférences
+                </a>
+            </li>
+        </ul>
+
+        <hr/>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-left me-2"></i>Déconnexion
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="page-content-wrapper" class="flex-grow-1">
+
+        <!-- TOP HEADER -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4">
+            <span class="navbar-brand fw-semibold text-dark" th:text="${pageTitle ?: 'Tableau de bord'}">Tableau de bord</span>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <a href="#" class="btn btn-sm btn-outline-secondary position-relative">
+                    <i class="bi bi-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem">3</span>
+                </a>
+                <span class="text-muted small" sec:authentication="name">user@email.com</span>
+            </div>
+        </nav>
+
+        <!-- FLASH MESSAGES -->
+        <div class="px-4 pt-3">
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+
+        <!-- PAGE CONTENT (injected by child templates) -->
+        <div class="p-4" th:replace="${content}">
+            <!-- content goes here -->
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

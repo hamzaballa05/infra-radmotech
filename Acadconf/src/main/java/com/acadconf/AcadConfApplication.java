@@ -1,0 +1,11 @@
+package com.acadconf;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AcadConfApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AcadConfApplication.class, args);
+    }
+}

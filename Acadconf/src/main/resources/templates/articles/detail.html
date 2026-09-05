@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Detail article')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('articles')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-container_max_width mx-auto">
+
+<!-- Flash messages -->
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant mb-6">
+  <a class="hover:text-primary hover:underline" sec:authorize="hasAnyRole('ADMIN','PRESIDENT')" th:href="@{/articles}">Toutes les soumissions</a>
+  <a class="hover:text-primary hover:underline" sec:authorize="hasRole('AUTEUR')" th:href="@{/articles/my}">Mes soumissions</a>
+  <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+  <a class="hover:text-primary hover:underline" th:href="@{/conferences/{id}(id=${article.conference.id})}" th:text="${article.conference.sigle ?: article.conference.titre}">Conférence</a>
+  <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+  <span class="text-on-surface font-medium" th:text="${'Article #' + article.id}">Article</span>
+</nav>
+
+<!-- Status Banner -->
+<div class="bg-surface-variant border border-outline-variant rounded-lg p-4 mb-6 flex items-start gap-4">
+  <span class="material-symbols-outlined text-on-surface-variant mt-0.5">pending</span>
+  <div>
+    <h3 class="font-h3 text-h3 text-on-surface mb-1">Soumis — en attente de traitement</h3>
+    <p class="font-body-sm text-body-sm text-on-surface-variant">Cet article a été soumis avec succès et est en attente d'affectation.</p>
+  </div>
+</div>
+
+<!-- Article Header -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 mb-8 shadow-sm">
+  <div class="flex justify-between items-start gap-4 mb-4">
+    <h1 class="font-h1 text-h1 text-on-surface" th:text="${article.titre}">Titre</h1>
+    <div class="px-3 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps whitespace-nowrap"
+         th:text="${'ID: #' + article.id}">ID</div>
+  </div>
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 font-body-base text-body-base text-on-surface-variant border-b border-outline-variant/50 pb-6">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[18px]">person</span>
+      <span th:text="${article.auteurPrincipal.nomComplet}">Auteur</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+      <span th:text="${'Soumis le ' + #temporals.format(article.dateSoumission,'dd MMM yyyy')}">Date</span>
+    </div>
+    <div class="flex items-center gap-2" th:if="${article.fichierPdf != null}">
+      <span class="material-symbols-outlined text-[18px]">description</span>
+      <a class="text-primary hover:underline flex items-center gap-1"
+         th:href="@{/uploads/{f}(f=${article.fichierPdf})}" target="_blank">
+        Télécharger le PDF <span class="material-symbols-outlined text-[14px]">download</span>
+      </a>
+    </div>
+  </div>
+  <div class="mb-4" th:if="${article.motsCles != null and !#strings.isEmpty(article.motsCles)}">
+    <h3 class="font-h3 text-h3 text-on-surface mb-2">Mots-clés</h3>
+    <div class="flex flex-wrap gap-2">
+      <span class="bg-surface-container-high text-on-surface font-label-caps text-label-caps px-3 py-1.5 rounded-full"
+            th:each="kw : ${#strings.arraySplit(article.motsCles, ',')}" th:text="${#strings.trim(kw)}">Mot-clé</span>
+    </div>
+  </div>
+  <div th:if="${article.resume != null and !#strings.isEmpty(article.resume)}">
+    <h3 class="font-h3 text-h3 text-on-surface mb-2">Résumé</h3>
+    <p class="font-body-base text-body-base text-on-surface-variant leading-relaxed" th:text="${article.resume}">Résumé...</p>
+  </div>
+</section>
+
+<!-- Conference info -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+  <h2 class="font-h2 text-h2 text-on-surface mb-4 flex items-center gap-2">
+    <span class="material-symbols-outlined text-surface-tint">event</span>
+    Conférence associée
+  </h2>
+  <div class="flex flex-wrap gap-4 font-body-base text-body-base text-on-surface-variant">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[18px]">badge</span>
+      <a class="text-primary hover:underline" th:href="@{/conferences/{id}(id=${article.conference.id})}"
+         th:text="${article.conference.titre}">Titre</a>
+    </div>
+    <div class="flex items-center gap-2" th:if="${article.conference.dateDebut != null}">
+      <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+      <span th:text="${#temporals.format(article.conference.dateDebut,'dd MMM yyyy')}">Date</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+</body>
+</html>

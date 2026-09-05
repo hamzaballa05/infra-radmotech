@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Conférence')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('conferences')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="mb-6 flex items-center gap-2 text-on-surface-variant">
+<a class="hover:text-primary font-body-sm text-body-sm" th:href="@{/conferences}">Conférences</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface font-body-sm text-body-sm font-medium"
+      th:text="${conference.id != null ? 'Modifier : ' + conference.titre : 'Nouvelle conférence'}">Nouvelle conférence</span>
+</div>
+<h1 class="font-h1 text-h1 text-primary mb-8"
+    th:text="${conference.id != null ? 'Modifier la conférence' : 'Créer une conférence'}">Créer une conférence</h1>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-8">
+<form th:action="${conference.id != null ? '/conferences/' + conference.id + '/edit' : '/conferences/new'}"
+      method="post" th:object="${conference}">
+<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+<!-- Section: Informations Générales -->
+<div class="mb-8">
+<h2 class="font-h3 text-h3 text-on-surface mb-4 border-b border-outline-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                        Informations Générales
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="titre">Titre de la conférence *</label>
+<input th:field="*{titre}" id="titre" type="text" required
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
+       placeholder="Ex: Conférence Internationale sur l'Intelligence Artificielle"/>
+</div>
+<div class="flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="sigle">Sigle *</label>
+<input th:field="*{sigle}" id="sigle" type="text" required
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
+       placeholder="Ex: CIIA 2024"/>
+</div>
+<div class="md:col-span-3 flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="description">Description</label>
+<textarea th:field="*{description}" id="description" rows="4"
+          class="p-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow resize-y"
+          placeholder="Décrivez les objectifs et la portée de la conférence..."></textarea>
+</div>
+<div class="md:col-span-3 flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="themes-input">Thèmes de recherche</label>
+<input type="hidden" th:field="*{themes}" id="themes-hidden"/>
+<div id="tags-container"
+     class="min-h-[42px] px-2 py-1.5 border border-outline-variant rounded bg-surface-container-lowest flex flex-wrap gap-2 items-center focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-shadow cursor-text"
+     onclick="document.getElementById('themes-input').focus()">
+  <input id="themes-input"
+         class="flex-1 min-w-[160px] border-none bg-transparent p-0 text-body-sm focus:ring-0 focus:outline-none h-7"
+         placeholder="Tapez un thème et appuyez sur Entrée ou virgule..."
+         type="text" autocomplete="off"/>
+</div>
+<p class="text-[11px] text-on-surface-variant">Appuyez sur <kbd class="px-1 py-0.5 bg-surface-container rounded text-[10px] border border-outline-variant">Entrée</kbd> ou <kbd class="px-1 py-0.5 bg-surface-container rounded text-[10px] border border-outline-variant">,</kbd> pour ajouter un thème.</p>
+</div>
+</div>
+</div>
+<!-- Section: Calendrier -->
+<div class="mb-8">
+<h2 class="font-h3 text-h3 text-on-surface mb-4 border-b border-outline-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+                        Calendrier
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+<!-- Dates de la conférence -->
+<div class="bg-surface-container-low p-4 rounded border border-surface-container-high">
+<h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium mb-3 uppercase tracking-wide">Déroulement de la conférence</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="dateDebut">Date de début</label>
+<input name="dateDebut" id="dateDebut" type="date"
+       th:value="${conference.dateDebut != null ? #temporals.format(conference.dateDebut, 'yyyy-MM-dd') : ''}"
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+</div>
+<div class="flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="dateFin">Date de fin</label>
+<input name="dateFin" id="dateFin" type="date"
+       th:value="${conference.dateFin != null ? #temporals.format(conference.dateFin, 'yyyy-MM-dd') : ''}"
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+</div>
+</div>
+</div>
+<!-- Dates de soumission -->
+<div class="bg-surface-container-low p-4 rounded border border-surface-container-high">
+<h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium mb-3 uppercase tracking-wide">Deadline soumission</h3>
+<div class="flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="dateLimiteSoumission">Date limite de soumission *</label>
+<input name="dateLimiteSoumission" id="dateLimiteSoumission" type="date" required
+       th:value="${conference.dateLimiteSoumission != null ? #temporals.format(conference.dateLimiteSoumission, 'yyyy-MM-dd') : ''}"
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+</div>
+</div>
+<!-- Dates d'évaluation -->
+<div class="bg-surface-container-low p-4 rounded border border-surface-container-high md:col-span-2">
+<h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium mb-3 uppercase tracking-wide">Période d'évaluation</h3>
+<div class="flex flex-col gap-[8px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="dateLimiteEvaluation">Deadline d'évaluation *</label>
+<input name="dateLimiteEvaluation" id="dateLimiteEvaluation" type="date" required
+       th:value="${conference.dateLimiteEvaluation != null ? #temporals.format(conference.dateLimiteEvaluation, 'yyyy-MM-dd') : ''}"
+       class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Paramètres -->
+<div class="mb-8">
+<h2 class="font-h3 text-h3 text-on-surface mb-4 border-b border-outline-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">settings_applications</span>
+                        Paramètres d'accès
+                    </h2>
+<div class="flex flex-col gap-[12px]">
+<label class="font-body-sm text-body-sm text-on-surface font-medium" for="statut">Statut de la conférence</label>
+<select th:field="*{statut}" id="statut"
+        class="h-10 px-3 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none max-w-xs">
+<option value="OUVERTE">Ouverte aux soumissions</option>
+<option value="FERMEE">Fermée</option>
+<option value="EN_EVALUATION">En évaluation</option>
+<option value="TERMINEE">Terminée</option>
+</select>
+</div>
+</div>
+<!-- Info Box -->
+<div class="bg-primary-fixed/20 border border-primary-fixed-dim rounded p-4 flex gap-3 mb-8">
+<span class="material-symbols-outlined text-primary mt-0.5">lightbulb</span>
+<div>
+<h4 class="font-body-sm text-body-sm font-bold text-primary mb-1">Règles de soumission</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                            Une fois la conférence "Ouverte", les auteurs pourront soumettre leurs articles. Assurez-vous que les dates de clôture sont correctement configurées pour éviter les soumissions tardives non désirées. Le processus d'évaluation s'activera automatiquement à la date de "Début des évaluations".
+                        </p>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center justify-end gap-4 border-t border-outline-variant pt-6">
+<a th:href="@{/conferences}" class="px-5 py-2.5 rounded font-body-base text-body-base font-medium text-primary hover:bg-surface-container-high transition-colors border border-outline-variant">
+Annuler
+</a>
+<button class="px-5 py-2.5 rounded font-body-base text-body-base font-medium bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span th:text="${conference.id != null ? 'Mettre à jour' : 'Créer la conférence'}">Créer</span>
+</button>
+</div>
+</form>
+</div>
+</main>
+<script>
+(function () {
+  const hidden   = document.getElementById('themes-hidden');
+  const input    = document.getElementById('themes-input');
+  const container = document.getElementById('tags-container');
+
+  let tags = hidden.value ? hidden.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  function sync() {
+    hidden.value = tags.join(',');
+  }
+
+  function renderTag(tag) {
+    const span = document.createElement('span');
+    span.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container text-on-surface text-body-sm font-body-sm';
+    span.textContent = tag;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'text-on-surface-variant hover:text-error flex items-center justify-center ml-0.5';
+    btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">close</span>';
+    btn.onclick = () => {
+      tags = tags.filter(t => t !== tag);
+      span.remove();
+      sync();
+    };
+
+    span.appendChild(btn);
+    container.insertBefore(span, input);
+  }
+
+  function addTag(raw) {
+    const val = raw.trim();
+    if (!val || tags.includes(val)) return;
+    tags.push(val);
+    renderTag(val);
+    sync();
+  }
+
+  // Render existing tags on load
+  tags.forEach(renderTag);
+  tags = [...tags]; // keep in sync
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(input.value);
+      input.value = '';
+    } else if (e.key === 'Backspace' && input.value === '' && tags.length) {
+      const last = tags[tags.length - 1];
+      tags.pop();
+      container.querySelectorAll('span').forEach(s => {
+        if (s.textContent.trim().startsWith(last)) s.remove();
+      });
+      sync();
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    if (input.value.trim()) {
+      addTag(input.value);
+      input.value = '';
+    }
+  });
+})();
+</script>
+</body>
+</html>

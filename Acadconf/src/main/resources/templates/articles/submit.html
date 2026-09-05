@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Soumettre un article')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('submit')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="flex-1 w-full max-w-4xl mx-auto">
+
+  <!-- Flash messages -->
+  <div th:replace="~{fragments/layout :: flash}"></div>
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h2 class="font-h1 text-h1 text-on-background"
+        th:text="${article.id != null ? 'Modifier la soumission' : 'Soumettre un article'}">Soumettre un article</h2>
+    <p class="font-body-base text-body-base text-on-surface-variant mt-2">Veuillez remplir les informations ci-dessous avec précision. Tous les champs marqués d'un astérisque (*) sont obligatoires.</p>
+  </div>
+
+  <!-- No open conferences -->
+  <div th:if="${conferences.empty}"
+       class="bg-surface-container-lowest border border-outline-variant rounded-xl p-12 text-center">
+    <span class="material-symbols-outlined text-[64px] text-outline block mb-4">event_busy</span>
+    <h3 class="font-h2 text-h2 text-on-surface mb-2">Aucune conférence ouverte</h3>
+    <p class="font-body-base text-body-base text-on-surface-variant mb-6">Il n'y a actuellement aucune conférence acceptant des soumissions. Revenez plus tard ou consultez la liste des conférences.</p>
+    <a th:href="@{/conferences}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-h3 text-h3 hover:bg-primary/90 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">event</span>
+      Voir les conférences
+    </a>
+  </div>
+
+  <!-- Form (only when conferences exist) -->
+  <div th:if="${!conferences.empty}">
+
+    <!-- Dynamic deadline banner (shown by JS when conference selected) -->
+    <div id="deadline-banner" class="hidden mb-6 p-4 rounded-lg flex items-start gap-3 shadow-sm border">
+      <span class="material-symbols-outlined mt-0.5" id="deadline-icon">warning</span>
+      <div>
+        <p class="font-h3 text-h3 mb-0.5" id="deadline-title"></p>
+        <p class="font-body-base text-body-base opacity-80" id="deadline-text"></p>
+      </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
+      <form th:action="${article.id != null ? '/articles/' + article.id + '/edit' : '/articles/submit'}"
+            method="post" enctype="multipart/form-data" th:object="${article}" class="flex flex-col gap-6">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <!-- Target Conference -->
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="conferenceId">Conférence Cible <span class="text-error">*</span></label>
+          <div class="relative">
+            <select name="conferenceId" id="conferenceId" required onchange="updateDeadline(this)"
+                    class="w-full appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-10 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+              <option value="" disabled th:selected="${selectedConferenceId == null}">Sélectionnez une conférence...</option>
+              <option th:each="c : ${conferences}"
+                      th:value="${c.id}"
+                      th:selected="${c.id == selectedConferenceId}"
+                      th:data-deadline="${#temporals.format(c.dateLimiteSoumission, 'yyyy-MM-dd')}"
+                      th:text="${c.titre + ' (' + c.sigle + ')'}">Conférence</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="titre">Titre de l'article <span class="text-error">*</span></label>
+          <input th:field="*{titre}" id="titre" type="text" required
+                 class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                 placeholder="Saisissez le titre complet de votre publication"/>
+        </div>
+
+        <!-- Abstract -->
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="resume">Résumé scientifique <span class="text-error">*</span></label>
+          <textarea th:field="*{resume}" id="resume" rows="5"
+                    class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-y"
+                    placeholder="Décrivez brièvement le contexte, la méthodologie, et les résultats principaux..."></textarea>
+        </div>
+
+        <!-- Keywords (tag chip input) -->
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="kw-input">Mots-clés</label>
+          <input type="hidden" th:field="*{motsCles}" id="kw-hidden"/>
+          <div id="kw-container"
+               class="min-h-[42px] px-2 py-1.5 border border-outline-variant rounded-lg bg-surface flex flex-wrap gap-2 items-center focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors cursor-text"
+               onclick="document.getElementById('kw-input').focus()">
+            <input id="kw-input" type="text" autocomplete="off"
+                   class="flex-1 min-w-[160px] border-none bg-transparent p-0 text-body-base focus:ring-0 focus:outline-none h-7"
+                   placeholder="Ex: Deep Learning, NLP… (Entrée ou virgule)"/>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-1">Appuyez sur <kbd class="px-1 py-0.5 bg-surface-container rounded text-[10px] border border-outline-variant">Entrée</kbd> ou <kbd class="px-1 py-0.5 bg-surface-container rounded text-[10px] border border-outline-variant">,</kbd> pour ajouter. <kbd class="px-1 py-0.5 bg-surface-container rounded text-[10px] border border-outline-variant">←</kbd> pour supprimer le dernier.</p>
+        </div>
+
+        <!-- PDF Upload -->
+        <div class="mt-2">
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5">
+            Fichier de la publication (PDF uniquement)
+            <span th:if="${article.id == null}" class="text-error">*</span>
+            <span th:if="${article.id != null}" class="text-on-surface-variant font-normal">(laisser vide pour conserver le fichier actuel)</span>
+          </label>
+
+          <!-- Existing PDF preview (edit mode only) -->
+          <div th:if="${article.id != null and article.fichierPdf != null}"
+               class="mb-3 flex items-center gap-3 px-4 py-3 bg-primary-fixed/20 border border-primary-fixed-dim rounded-lg">
+            <span class="material-symbols-outlined text-primary text-[22px]">picture_as_pdf</span>
+            <div class="flex-1 min-w-0">
+              <p class="font-body-sm text-body-sm text-on-surface font-medium">Fichier actuel</p>
+              <p class="font-body-sm text-[11px] text-on-surface-variant truncate" th:text="${article.fichierPdf}"></p>
+            </div>
+            <a th:href="@{/uploads/{f}(f=${article.fichierPdf})}" target="_blank"
+               class="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-primary text-primary text-body-sm font-h3 hover:bg-primary hover:text-on-primary transition-colors shrink-0">
+              <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+              Voir le PDF
+            </a>
+          </div>
+
+          <div class="border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center text-center bg-surface hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-[48px] text-primary mb-3">upload_file</span>
+            <p class="font-h3 text-h3 text-on-surface mb-1"
+               th:text="${article.id != null ? 'Remplacer le fichier PDF' : 'Sélectionnez votre fichier PDF'}">Sélectionnez votre fichier PDF</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Taille maximale : 10 Mo</p>
+            <input type="file" name="fichier" accept="application/pdf"
+                   th:required="${article.id == null}"
+                   class="block w-full text-body-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-h3 file:bg-primary file:text-on-primary hover:file:bg-primary/90 cursor-pointer"/>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-outline-variant">
+          <a th:href="@{/articles/my}" class="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-h3 text-h3 hover:bg-surface-container hover:text-on-surface transition-colors">
+            Annuler
+          </a>
+          <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary text-on-primary font-h3 text-h3 shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+            <span th:text="${article.id != null ? 'Enregistrer les modifications' : 'Soumettre article'}">Soumettre</span>
+            <span class="material-symbols-outlined text-[20px]" th:text="${article.id != null ? 'save' : 'send'}">send</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+function updateDeadline(select) {
+  const banner  = document.getElementById('deadline-banner');
+  const icon    = document.getElementById('deadline-icon');
+  const title   = document.getElementById('deadline-title');
+  const text    = document.getElementById('deadline-text');
+  const opt     = select.options[select.selectedIndex];
+  const deadline = opt.dataset.deadline;
+
+  if (!deadline) { banner.className = 'hidden mb-6'; return; }
+
+  const deadlineDate = new Date(deadline);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const daysLeft = Math.ceil((deadlineDate - today) / 86400000);
+
+  const fmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  if (daysLeft <= 0) {
+    banner.className = 'mb-6 p-4 rounded-lg flex items-start gap-3 shadow-sm border bg-error-container border-error/30';
+    icon.textContent = 'event_busy';
+    icon.className = 'material-symbols-outlined mt-0.5 text-error';
+    title.className = 'font-h3 text-h3 mb-0.5 text-error';
+    title.textContent = 'Date limite dépassée';
+    text.className = 'font-body-base text-body-base text-error/80';
+    text.textContent = 'La date limite de soumission était le ' + fmt.format(deadlineDate) + '. Vous ne pouvez plus soumettre pour cette conférence.';
+  } else if (daysLeft <= 7) {
+    banner.className = 'mb-6 p-4 rounded-lg flex items-start gap-3 shadow-sm border bg-[#fff8e1] border-[#f59e0b]/40';
+    icon.textContent = 'warning';
+    icon.className = 'material-symbols-outlined mt-0.5 text-[#b45309]';
+    title.className = 'font-h3 text-h3 mb-0.5 text-[#b45309]';
+    title.textContent = 'Date limite imminente — ' + daysLeft + ' jour' + (daysLeft > 1 ? 's' : '') + ' restant' + (daysLeft > 1 ? 's' : '');
+    text.className = 'font-body-base text-body-base text-[#92400e]/80';
+    text.textContent = 'La date limite de soumission est le ' + fmt.format(deadlineDate) + '. Passé ce délai, aucune nouvelle proposition ne sera acceptée.';
+  } else {
+    banner.className = 'mb-6 p-4 rounded-lg flex items-start gap-3 shadow-sm border bg-primary-fixed/20 border-primary-fixed-dim';
+    icon.textContent = 'event_available';
+    icon.className = 'material-symbols-outlined mt-0.5 text-primary';
+    title.className = 'font-h3 text-h3 mb-0.5 text-primary';
+    title.textContent = 'Soumissions ouvertes — ' + daysLeft + ' jours restants';
+    text.className = 'font-body-base text-body-base text-on-surface-variant';
+    text.textContent = 'Date limite de soumission : ' + fmt.format(deadlineDate) + '.';
+  }
+}
+
+// Auto-trigger deadline banner if a conference is pre-selected
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('conferenceId');
+  if (sel && sel.value) updateDeadline(sel);
+
+  // ── Keywords tag chip input ──────────────────────────────────────────
+  const hidden    = document.getElementById('kw-hidden');
+  const kwInput   = document.getElementById('kw-input');
+  const kwContainer = document.getElementById('kw-container');
+  if (!hidden || !kwInput || !kwContainer) return;
+
+  let tags = hidden.value ? hidden.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  function syncHidden() { hidden.value = tags.join(','); }
+
+  function createChip(tag) {
+    const chip = document.createElement('span');
+    chip.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container text-on-surface text-body-sm font-body-sm';
+    chip.dataset.tag = tag;
+    chip.textContent = tag;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'text-on-surface-variant hover:text-error flex items-center justify-center ml-0.5';
+    btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">close</span>';
+    btn.onclick = () => { tags = tags.filter(t => t !== tag); chip.remove(); syncHidden(); };
+    chip.appendChild(btn);
+    kwContainer.insertBefore(chip, kwInput);
+  }
+
+  function addTag(raw) {
+    const val = raw.trim();
+    if (!val || tags.includes(val)) return;
+    tags.push(val);
+    createChip(val);
+    syncHidden();
+  }
+
+  // Render existing tags on load
+  tags.forEach(createChip);
+
+  kwInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(kwInput.value);
+      kwInput.value = '';
+    } else if (e.key === 'Backspace' && kwInput.value === '' && tags.length) {
+      const last = tags.pop();
+      kwContainer.querySelector(`[data-tag="${CSS.escape(last)}"]`)?.remove();
+      syncHidden();
+    }
+  });
+
+  kwInput.addEventListener('blur', () => {
+    if (kwInput.value.trim()) { addTag(kwInput.value); kwInput.value = ''; }
+  });
+});
+</script>
+</body>
+</html>

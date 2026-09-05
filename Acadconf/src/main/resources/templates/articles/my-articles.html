@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Mes Articles')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('articles')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-[container_max_width] mx-auto">
+
+<!-- Flash messages -->
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-6">
+  <div>
+    <h2 class="font-h1 text-h1 text-on-surface mb-1">Mes Articles</h2>
+    <p class="font-body-base text-body-base text-on-surface-variant">Gérez vos soumissions et suivez leur statut d'évaluation.</p>
+  </div>
+  <a th:href="@{/articles/submit}"
+     class="h-10 px-4 bg-primary text-on-primary rounded-lg font-h3 text-h3 flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm">
+    <span class="material-symbols-outlined text-[18px]">add</span>
+    Soumettre un article
+  </a>
+</div>
+
+<!-- Filter Bar -->
+<form method="get" action="/articles/my"
+      class="bg-surface border border-outline-variant rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end shadow-[0_2px_8px_-2px_rgba(26,58,92,0.05)]">
+
+  <!-- Conférence -->
+  <div class="flex-1 min-w-[200px] flex flex-col gap-1.5">
+    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Conférence</label>
+    <div class="relative">
+      <select name="conferenceId"
+              class="w-full h-9 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm text-on-surface appearance-none focus:border-primary focus:ring-1 focus:ring-primary">
+        <option value="" th:selected="${conferenceId == null}">Toutes les conférences</option>
+        <option th:each="c : ${conferences}"
+                th:value="${c.id}"
+                th:text="${c.titre + ' (' + c.sigle + ')'}"
+                th:selected="${c.id == conferenceId}">Conférence</option>
+      </select>
+      <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+    </div>
+  </div>
+
+  <!-- Statut -->
+  <div class="w-[180px] flex flex-col gap-1.5">
+    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Statut</label>
+    <div class="relative">
+      <select name="statut"
+              class="w-full h-9 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm text-on-surface appearance-none focus:border-primary focus:ring-1 focus:ring-primary">
+        <option value="" th:selected="${statut == null or statut == ''}">Tous les statuts</option>
+        <option value="SOUMIS"        th:selected="${statut == 'SOUMIS'}">Soumis</option>
+        <option value="EN_EVALUATION" th:selected="${statut == 'EN_EVALUATION'}">En évaluation</option>
+        <option value="ACCEPTE"       th:selected="${statut == 'ACCEPTE'}">Accepté</option>
+        <option value="REJETE"        th:selected="${statut == 'REJETE'}">Rejeté</option>
+      </select>
+      <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+    </div>
+  </div>
+
+  <!-- Recherche par titre -->
+  <div class="flex-1 min-w-[200px] flex flex-col gap-1.5">
+    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Titre</label>
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+      <input type="text" name="search" th:value="${search}"
+             class="w-full h-9 pl-9 pr-3 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary"
+             placeholder="Rechercher par titre..."/>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <button type="submit"
+          class="h-9 px-4 bg-primary text-on-primary rounded-lg font-h3 text-h3 hover:bg-primary/90 transition-colors flex items-center gap-2">
+    <span class="material-symbols-outlined text-[18px]">filter_list</span>
+    Filtrer
+  </button>
+  <a th:href="@{/articles/my}"
+     class="h-9 px-4 border border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-lg font-h3 text-h3 hover:bg-surface-container-low hover:text-on-surface transition-colors flex items-center gap-2">
+    <span class="material-symbols-outlined text-[18px]">filter_list_off</span>
+    Réinitialiser
+  </a>
+</form>
+
+<!-- Data Table -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden shadow-[0_2px_8px_-2px_rgba(26,58,92,0.05)]">
+  <table class="w-full text-left border-collapse">
+    <thead class="bg-surface-container-low border-b border-outline-variant">
+    <tr>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase w-16">#</th>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Titre</th>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase">Conférence</th>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase w-32">Date</th>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase w-40">Statut</th>
+      <th class="h-[48px] px-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right w-24">Actions</th>
+    </tr>
+    </thead>
+    <tbody class="font-data-tabular text-data-tabular text-on-surface divide-y divide-outline-variant" th:if="${!articles.empty}">
+    <tr class="h-[48px] even:bg-surface-container-low hover:bg-surface-container-high transition-colors group"
+        th:each="a : ${articles}">
+      <td class="px-4 text-on-surface-variant" th:text="${a.id}">—</td>
+      <td class="px-4 font-body-sm font-medium">
+        <a class="text-primary hover:underline truncate max-w-md block"
+           th:href="@{/articles/{id}(id=${a.id})}" th:text="${a.titre}">Titre</a>
+      </td>
+      <td class="px-4 text-on-surface-variant" th:text="${a.conference.sigle ?: a.conference.titre}">Conf</td>
+      <td class="px-4 text-on-surface-variant" th:text="${#temporals.format(a.dateSoumission,'dd MMM yyyy')}">—</td>
+      <td class="px-4">
+        <span th:switch="${a.statutArticle.name()}">
+          <span th:case="'SOUMIS'" class="inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-semibold tracking-wide bg-secondary-container/60 text-on-secondary-container">SOUMIS</span>
+          <span th:case="'EN_EVALUATION'" class="inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-semibold tracking-wide bg-surface-variant text-on-surface-variant">EN ÉVALUATION</span>
+          <span th:case="'ACCEPTE'" class="inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-semibold tracking-wide bg-primary-fixed text-on-primary-fixed">ACCEPTÉ</span>
+          <span th:case="'REJETE'" class="inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-semibold tracking-wide bg-error-container text-on-error-container">REJETÉ</span>
+        </span>
+      </td>
+      <td class="px-4 text-right">
+        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <a th:href="@{/articles/{id}(id=${a.id})}" class="text-on-surface-variant hover:text-primary transition-colors" title="Voir les détails">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+          </a>
+          <a th:href="@{/articles/{id}/edit(id=${a.id})}"
+             th:if="${a.statutArticle.name() == 'SOUMIS'}"
+             class="text-on-surface-variant hover:text-primary transition-colors" title="Modifier">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+          </a>
+          <form th:if="${a.statutArticle.name() == 'SOUMIS'}"
+                th:action="@{/articles/{id}/delete(id=${a.id})}" method="post" class="inline"
+                onsubmit="return confirm('Supprimer cet article ?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="text-on-surface-variant hover:text-error transition-colors" title="Supprimer">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+    <tbody th:if="${articles.empty}">
+    <tr>
+      <td colspan="6" class="px-4 py-12 text-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-[48px] block mb-2">description</span>
+        <p class="font-body-base">Aucune soumission ne correspond aux critères.</p>
+        <a th:href="@{/articles/submit}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-h3 text-h3">
+          <span class="material-symbols-outlined text-[18px]">add</span>Soumettre un article
+        </a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="bg-surface border-t border-outline-variant px-4 py-3 flex items-center justify-between"
+       th:if="${pageResult.totalPages > 1}">
+    <p class="font-body-sm text-body-sm text-on-surface-variant">
+      Page <span th:text="${pageResult.number + 1}">1</span> sur <span th:text="${pageResult.totalPages}">1</span>
+      — <span th:text="${pageResult.totalElements}">0</span> article(s)
+    </p>
+    <div class="flex gap-1">
+      <a th:if="${!pageResult.first}"
+         th:href="@{/articles/my(page=${pageResult.number - 1}, search=${search}, statut=${statut}, conferenceId=${conferenceId})}"
+         class="inline-flex items-center px-3 py-1.5 rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container font-body-sm text-body-sm">
+        <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+      </a>
+      <th:block th:each="p : ${#numbers.sequence(0, pageResult.totalPages - 1)}">
+        <a th:href="@{/articles/my(page=${p}, search=${search}, statut=${statut}, conferenceId=${conferenceId})}"
+           th:text="${p + 1}"
+           th:classappend="${p == pageResult.number} ? 'bg-primary text-on-primary border-primary' : 'text-on-surface-variant hover:bg-surface-container'"
+           class="inline-flex items-center px-3 py-1.5 rounded border border-outline-variant font-body-sm text-body-sm min-w-[36px] justify-center">1</a>
+      </th:block>
+      <a th:if="${!pageResult.last}"
+         th:href="@{/articles/my(page=${pageResult.number + 1}, search=${search}, statut=${statut}, conferenceId=${conferenceId})}"
+         class="inline-flex items-center px-3 py-1.5 rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container font-body-sm text-body-sm">
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${editMode ? 'Modifier utilisateur' : 'Nouvel utilisateur'})}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('users')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-2xl mx-auto">
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant mb-6">
+    <a th:href="@{/admin/users}" class="hover:text-primary hover:underline">Utilisateurs</a>
+    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+    <span class="text-on-surface font-medium" th:text="${editMode ? 'Modifier' : 'Nouvel utilisateur'}">Form</span>
+  </nav>
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="font-h1 text-h1 text-on-surface" th:text="${editMode ? 'Modifier utilisateur' : 'Créer un utilisateur'}">Utilisateur</h1>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1"
+       th:text="${editMode ? 'Modifiez les informations du compte ci-dessous.' : 'Remplissez les informations pour créer un nouveau compte.'}"></p>
+  </div>
+
+  <!-- Flash messages -->
+  <div th:replace="~{fragments/layout :: flash}"></div>
+
+  <!-- Form Card -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
+    <form th:action="${editMode ? '/admin/users/' + utilisateur.id + '/edit' : '/admin/users/new'}"
+          method="post" th:object="${utilisateur}" class="flex flex-col gap-5">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <!-- Name row -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="prenom">Prénom <span class="text-error">*</span></label>
+          <input th:field="*{prenom}" id="prenom" type="text" required
+                 class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                 placeholder="Prénom"/>
+        </div>
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="nom">Nom <span class="text-error">*</span></label>
+          <input th:field="*{nom}" id="nom" type="text" required
+                 class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                 placeholder="Nom de famille"/>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="email">Adresse e-mail <span class="text-error">*</span></label>
+        <input th:field="*{email}" id="email" type="email" required
+               class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+               placeholder="exemple@domaine.com"/>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="motDePasseNew">
+          Mot de passe
+          <span th:if="${!editMode}" class="text-error">*</span>
+          <span th:if="${editMode}" class="text-on-surface-variant">(laisser vide pour conserver l'actuel)</span>
+        </label>
+        <input type="password" name="motDePasseNew" id="motDePasseNew"
+               th:required="${!editMode}"
+               class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+               placeholder="Minimum 8 caractères"/>
+      </div>
+
+      <!-- Role & Statut -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="role">Rôle <span class="text-error">*</span></label>
+          <div class="relative">
+            <select th:field="*{role}" id="role" required
+                    class="w-full appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-10 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+              <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}">ROLE</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+          </div>
+        </div>
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="statutCompte">Statut du compte</label>
+          <div class="relative">
+            <select th:field="*{statutCompte}" id="statutCompte"
+                    class="w-full appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-10 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+              <option th:each="s : ${statuts}" th:value="${s.name()}" th:text="${s.name()}">STATUT</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Affiliation & Pays -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="affiliation">Affiliation</label>
+          <input th:field="*{affiliation}" id="affiliation" type="text"
+                 class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                 placeholder="Université / Organisation"/>
+        </div>
+        <div>
+          <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1.5" for="pays">Pays</label>
+          <input th:field="*{pays}" id="pays" type="text"
+                 class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-body-base text-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                 placeholder="France"/>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 mt-4 pt-6 border-t border-outline-variant">
+        <a th:href="@{/admin/users}"
+           class="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-h3 text-h3 hover:bg-surface-container hover:text-on-surface transition-colors">
+          Annuler
+        </a>
+        <button type="submit"
+                class="px-6 py-2.5 rounded-lg bg-primary text-on-primary font-h3 text-h3 shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px]" th:text="${editMode ? 'save' : 'person_add'}">save</span>
+          <span th:text="${editMode ? 'Enregistrer' : 'Créer utilisateur'}">Enregistrer</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+</main>
+</body>
+</html>

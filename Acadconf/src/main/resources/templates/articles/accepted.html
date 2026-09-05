@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Articles acceptés')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('accepted')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-container_max_width mx-auto flex flex-col gap-6">
+
+  <div th:replace="~{fragments/layout :: flash}"></div>
+
+  <!-- Page Header -->
+  <div class="flex items-end justify-between pt-2">
+    <div>
+      <h1 class="font-h1 text-h1 text-on-surface">Articles acceptés</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+        Liste des soumissions officiellement acceptées.
+        <span class="font-semibold text-primary" th:text="${articles.size()}">0</span> article(s).
+      </p>
+    </div>
+  </div>
+
+  <!-- Conference filter -->
+  <form method="get" th:action="@{/articles/accepted}" class="flex flex-wrap gap-3 items-end">
+    <select name="conferenceId"
+            class="h-9 px-3 bg-surface border border-outline-variant rounded-lg text-[13px] text-on-surface focus:outline-none focus:border-primary transition-all">
+      <option value="" th:selected="${conferenceId == null}">Toutes les conférences</option>
+      <option th:each="c : ${conferences}"
+              th:value="${c.id}"
+              th:text="${c.sigle ?: c.titre}"
+              th:selected="${conferenceId != null and conferenceId == c.id}">Conférence</option>
+    </select>
+    <button type="submit"
+            class="h-9 px-4 bg-primary text-on-primary rounded-lg text-[13px] font-semibold hover:bg-primary/90 transition-colors">
+      Filtrer
+    </button>
+    <a th:if="${conferenceId != null}" th:href="@{/articles/accepted}"
+       class="h-9 px-4 flex items-center border border-outline-variant text-on-surface-variant rounded-lg text-[13px] hover:bg-surface-container-high transition-colors">
+      Réinitialiser
+    </a>
+  </form>
+
+  <!-- Empty state -->
+  <div th:if="${articles.empty}"
+       class="bg-surface border border-outline-variant rounded-xl p-12 text-center">
+    <span class="material-symbols-outlined text-[64px] text-outline block mb-4">verified</span>
+    <h2 class="font-h2 text-h2 text-on-surface mb-2">Aucun article accepté</h2>
+    <p class="font-body-base text-body-base text-on-surface-variant">
+      Aucun article n'a encore été accepté
+      <th:block th:if="${conferenceId != null}"> pour cette conférence</th:block>.
+    </p>
+  </div>
+
+  <!-- Articles table -->
+  <div th:if="${!articles.empty}"
+       class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <table class="w-full text-[13px]">
+      <thead class="bg-surface-container border-b border-outline-variant">
+        <tr>
+          <th class="text-left px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide w-12">#</th>
+          <th class="text-left px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide">Titre</th>
+          <th class="text-left px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide">Auteur principal</th>
+          <th class="text-left px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide">Conférence</th>
+          <th class="text-left px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide">Date soumission</th>
+          <th class="text-right px-5 py-3 font-semibold text-on-surface-variant text-[12px] uppercase tracking-wide"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant/40">
+        <tr th:each="a : ${articles}"
+            class="hover:bg-surface-container-low transition-colors">
+          <td class="px-5 py-3 text-on-surface-variant" th:text="${a.id}">1</td>
+          <td class="px-5 py-3">
+            <span class="font-medium text-on-surface" th:text="${a.titre}">Titre</span>
+          </td>
+          <td class="px-5 py-3 text-on-surface-variant" th:text="${a.auteurPrincipal.nomComplet}">Auteur</td>
+          <td class="px-5 py-3 text-on-surface-variant" th:text="${a.conference.sigle ?: a.conference.titre}">Conf</td>
+          <td class="px-5 py-3 text-on-surface-variant"
+              th:text="${#temporals.format(a.dateSoumission,'dd/MM/yyyy')}">Date</td>
+          <td class="px-5 py-3 text-right">
+            <a th:href="@{/articles/{id}(id=${a.id})}"
+               class="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+              Voir
+              <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Export buttons (admin/president only) -->
+  <div sec:authorize="hasAnyRole('ADMIN','PRESIDENT')" th:if="${conferenceId != null}"
+       class="flex gap-3">
+    <a th:href="@{/export/{id}/excel(id=${conferenceId})}"
+       class="flex items-center gap-2 border border-outline-variant text-on-surface-variant px-4 py-2 rounded-lg hover:bg-surface-container-high transition-colors text-[13px] font-medium">
+      <span class="material-symbols-outlined text-[18px]">table_view</span>
+      Exporter Excel
+    </a>
+    <a th:href="@{/export/{id}/pdf(id=${conferenceId})}"
+       class="flex items-center gap-2 border border-outline-variant text-on-surface-variant px-4 py-2 rounded-lg hover:bg-surface-container-high transition-colors text-[13px] font-medium">
+      <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+      Exporter PDF
+    </a>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

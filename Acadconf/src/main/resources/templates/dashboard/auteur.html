@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('AcadConf – Tableau de bord')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('dashboard')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="flex-1 mt-header_height p-4 md:p-gutter max-w-container_max_width mx-auto w-full">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-h3 text-h3"
+     th:text="${#strings.substring(user.prenom,0,1) + #strings.substring(user.nom,0,1)}">AB</div>
+<div>
+<h2 class="font-h1 text-h1 text-on-surface" th:text="${user.nomComplet}">Mon Nom</h2>
+<span class="inline-flex items-center px-2 py-0.5 rounded-DEFAULT bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps mt-1">Auteur</span>
+</div>
+</div>
+<h3 class="font-h2 text-h2 text-on-surface-variant mt-4">Tableau de bord</h3>
+</div>
+<a th:href="@{/articles/submit}" class="bg-primary hover:bg-primary/90 text-on-primary px-4 py-2 rounded-lg font-h3 text-h3 transition-colors flex items-center gap-2 h-10 w-fit">
+<span class="material-symbols-outlined text-[18px]">add</span>
+Soumettre un article
+</a>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_4px_12px_rgba(26,58,92,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-body-base text-body-base text-on-surface-variant">Articles soumis</span>
+<span class="material-symbols-outlined text-outline">description</span>
+</div>
+<div class="font-h1 text-[32px] leading-tight text-primary font-bold" th:text="${totalSoumis}">0</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-2 border-t border-outline-variant/30 pt-2">Depuis la création du compte</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_4px_12px_rgba(26,58,92,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-body-base text-body-base text-on-surface-variant">En évaluation</span>
+<span class="material-symbols-outlined text-outline">hourglass_empty</span>
+</div>
+<div class="font-h1 text-[32px] leading-tight text-primary font-bold" th:text="${totalEnEvaluation}">0</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-2 border-t border-outline-variant/30 pt-2">Réponses attendues</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-[0_4px_12px_rgba(26,58,92,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-body-base text-body-base text-on-surface-variant">Acceptés</span>
+<span class="material-symbols-outlined text-primary-fixed-dim">check_circle</span>
+</div>
+<div class="font-h1 text-[32px] leading-tight text-primary font-bold" th:text="${totalAcceptes}">0</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-2 border-t border-outline-variant/30 pt-2">Articles publiables</div>
+</div>
+</div>
+<!-- Content grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Articles table -->
+<div class="lg:col-span-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h2 text-h2 text-on-surface">Mes dernières soumissions</h3>
+<a th:href="@{/articles/my}" class="text-primary hover:text-primary/80 font-body-sm text-body-sm flex items-center gap-1 transition-colors">
+Voir tout <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+<div th:if="${articles.empty}" class="p-8 text-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[48px] block mb-2">description</span>
+<p>Aucune soumission pour le moment.</p>
+<a th:href="@{/articles/submit}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-h3 text-h3">
+<span class="material-symbols-outlined text-[18px]">add</span>Soumettre maintenant
+</a>
+</div>
+<div class="overflow-x-auto" th:unless="${articles.empty}">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant font-data-tabular text-data-tabular text-on-surface-variant uppercase tracking-wider">
+<th class="py-3 px-4 font-semibold">Titre</th>
+<th class="py-3 px-4 font-semibold">Conférence</th>
+<th class="py-3 px-4 font-semibold">Date</th>
+<th class="py-3 px-4 font-semibold">Statut</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant/50">
+<tr class="h-[48px] hover:bg-surface-container-low/50 transition-colors" th:each="a : ${articles}">
+<td class="py-2 px-4 font-medium max-w-[200px] truncate" th:title="${a.titre}" th:text="${#strings.abbreviate(a.titre, 40)}">Titre...</td>
+<td class="py-2 px-4" th:text="${a.conference.sigle ?: a.conference.titre}">Conf</td>
+<td class="py-2 px-4 text-on-surface-variant font-data-tabular text-data-tabular"
+    th:text="${#temporals.format(a.dateSoumission,'dd MMM yyyy')}">—</td>
+<td class="py-2 px-4">
+<span th:switch="${a.statutArticle.name()}">
+<span th:case="'SOUMIS'" class="inline-flex items-center px-2 py-1 rounded-DEFAULT bg-secondary-container/60 text-on-secondary-container font-label-caps text-[10px]">Soumis</span>
+<span th:case="'EN_EVALUATION'" class="inline-flex items-center px-2 py-1 rounded-DEFAULT bg-surface-variant text-on-surface-variant font-label-caps text-[10px]">En évaluation</span>
+<span th:case="'ACCEPTE'" class="inline-flex items-center px-2 py-1 rounded-DEFAULT bg-primary-fixed text-on-primary-fixed font-label-caps text-[10px]">Accepté</span>
+<span th:case="'REJETE'" class="inline-flex items-center px-2 py-1 rounded-DEFAULT bg-error-container text-on-error-container font-label-caps text-[10px]">Rejeté</span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Open conferences -->
+<div class="lg:col-span-1">
+<h3 class="font-h2 text-h2 text-on-surface mb-4">Conférences ouvertes</h3>
+<div th:if="${conferencesOuvertes.empty}" class="p-6 text-center text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded-xl">
+<span class="material-symbols-outlined text-[40px] block mb-2">event_busy</span>
+<p class="font-body-sm">Aucune conférence ouverte.</p>
+</div>
+<div class="space-y-4" th:unless="${conferencesOuvertes.empty}">
+<a th:each="c : ${conferencesOuvertes}" th:href="@{/conferences/{id}(id=${c.id})}"
+   class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col relative overflow-hidden group hover:border-primary/50 transition-colors block">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-h3 text-h3 text-on-surface" th:text="${c.sigle ?: c.titre}">Conférence</h4>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2" th:text="${c.description}">Description...</p>
+<div class="flex justify-between items-center border-t border-outline-variant/30 pt-3">
+<span class="font-data-tabular text-data-tabular text-on-surface-variant">
+Clôture: <span th:text="${#temporals.format(c.dateLimiteSoumission,'dd MMM')}">—</span>
+</span>
+<span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Toutes les soumissions')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('articles')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-container_max_width mx-auto flex flex-col gap-6">
+
+  <div th:replace="~{fragments/layout :: flash}"></div>
+
+  <!-- Page Header -->
+  <div class="flex items-end justify-between pt-2">
+    <div>
+      <h1 class="font-h1 text-h1 text-on-surface">Toutes les soumissions</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Vue globale de tous les articles soumis.</p>
+    </div>
+  </div>
+
+  <!-- Stats (always full-dataset totals) -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex flex-col gap-1">
+      <span class="font-body-sm text-body-sm text-on-surface-variant">Soumis</span>
+      <span class="font-bold text-[28px] text-on-surface" th:text="${totalSoumis}">0</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex flex-col gap-1">
+      <span class="font-body-sm text-body-sm text-on-surface-variant">En évaluation</span>
+      <span class="font-bold text-[28px] text-surface-tint" th:text="${totalEnEvaluation}">0</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex flex-col gap-1">
+      <span class="font-body-sm text-body-sm text-on-surface-variant">Acceptés</span>
+      <span class="font-bold text-[28px] text-primary" th:text="${totalAcceptes}">0</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex flex-col gap-1">
+      <span class="font-body-sm text-body-sm text-on-surface-variant">Rejetés</span>
+      <span class="font-bold text-[28px] text-error" th:text="${totalRejetes}">0</span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" th:action="@{/articles}" class="flex flex-wrap gap-3 items-end">
+    <!-- Search -->
+    <div class="relative flex-1 min-w-[200px]">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[17px] pointer-events-none">search</span>
+      <input name="search" type="text" th:value="${search}"
+             placeholder="Titre, auteur…"
+             class="w-full h-9 pl-9 pr-3 bg-surface border border-outline-variant rounded-lg text-[13px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/60"/>
+    </div>
+    <!-- Status filter -->
+    <select name="statut"
+            class="h-9 px-3 bg-surface border border-outline-variant rounded-lg text-[13px] text-on-surface focus:outline-none focus:border-primary transition-all">
+      <option value="" th:selected="${statut == null or statut == ''}">Tous les statuts</option>
+      <option value="SOUMIS"        th:selected="${statut == 'SOUMIS'}">Soumis</option>
+      <option value="EN_EVALUATION" th:selected="${statut == 'EN_EVALUATION'}">En évaluation</option>
+      <option value="ACCEPTE"       th:selected="${statut == 'ACCEPTE'}">Accepté</option>
+      <option value="REJETE"        th:selected="${statut == 'REJETE'}">Rejeté</option>
+    </select>
+    <!-- Conference filter -->
+    <select name="conferenceId"
+            class="h-9 px-3 bg-surface border border-outline-variant rounded-lg text-[13px] text-on-surface focus:outline-none focus:border-primary transition-all">
+      <option value="" th:selected="${conferenceId == null}">Toutes les conférences</option>
+      <option th:each="c : ${conferences}" th:value="${c.id}" th:text="${c.sigle ?: c.titre}"
+              th:selected="${conferenceId != null and conferenceId == c.id}">Conf</option>
+    </select>
+    <button type="submit"
+            class="h-9 px-4 bg-primary text-on-primary rounded-lg text-[13px] font-semibold hover:bg-primary/90 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+      <span class="material-symbols-outlined text-[16px]">filter_list</span>Filtrer
+    </button>
+    <a th:if="${(search != null and search != '') or (statut != null and statut != '') or conferenceId != null}"
+       th:href="@{/articles}"
+       class="h-9 px-4 border border-outline-variant text-on-surface-variant rounded-lg text-[13px] hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">close</span>Réinitialiser
+    </a>
+  </form>
+
+  <!-- Table -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+    <div class="px-5 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+      <h2 class="font-h3 text-h3 text-on-surface">Articles soumis</h2>
+      <span class="font-body-sm text-body-sm text-on-surface-variant"
+            th:text="${pageResult.totalElements + ' article(s)'}">0 article(s)</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low border-b border-outline-variant">
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">#</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">TITRE</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">AUTEUR</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">CONFÉRENCE</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">DATE</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">STATUT</th>
+            <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">ACTION</th>
+          </tr>
+        </thead>
+        <tbody th:if="${!articles.empty}">
+          <tr th:each="a : ${articles}" class="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
+            <td class="py-3 px-4 text-on-surface-variant font-body-sm" th:text="${'#' + a.id}"></td>
+            <td class="py-3 px-4 max-w-[260px]">
+              <a th:href="@{/articles/{id}(id=${a.id})}"
+                 class="font-body-sm text-on-surface hover:text-primary hover:underline truncate block"
+                 th:text="${#strings.abbreviate(a.titre, 60)}">Titre</a>
+            </td>
+            <td class="py-3 px-4 font-body-sm text-on-surface" th:text="${a.auteurPrincipal.nomComplet}"></td>
+            <td class="py-3 px-4 font-body-sm text-on-surface-variant" th:text="${a.conference.sigle ?: a.conference.titre}"></td>
+            <td class="py-3 px-4 font-body-sm text-on-surface-variant"
+                th:text="${#temporals.format(a.dateSoumission,'dd MMM yyyy')}"></td>
+            <td class="py-3 px-4">
+              <span th:switch="${a.statutArticle.name()}">
+                <span th:case="'SOUMIS'"        class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary-container text-on-secondary-container">Soumis</span>
+                <span th:case="'EN_EVALUATION'" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-fixed/40 text-primary">En évaluation</span>
+                <span th:case="'ACCEPTE'"       class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-fixed text-on-primary-fixed">Accepté</span>
+                <span th:case="'REJETE'"        class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-error-container text-error">Rejeté</span>
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <a th:href="@{/articles/{id}(id=${a.id})}"
+                 class="inline-flex items-center gap-1 px-3 py-1 rounded border border-outline-variant text-body-sm text-on-surface-variant hover:text-primary hover:border-primary transition-colors">
+                <span class="material-symbols-outlined text-[16px]">visibility</span>Voir
+              </a>
+            </td>
+          </tr>
+        </tbody>
+        <tbody th:if="${articles.empty}">
+          <tr>
+            <td colspan="7" class="py-12 text-center text-on-surface-variant font-body-sm">
+              <span class="material-symbols-outlined text-[48px] block mb-2 text-outline-variant">inbox</span>
+              Aucun article ne correspond aux filtres sélectionnés.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination -->
+    <div th:replace="~{fragments/layout :: pagination(${pageResult}, '/articles?search=' + (${search} ?: '') + '&statut=' + (${statut} ?: '') + '&conferenceId=' + (${conferenceId} ?: ''))}"></div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

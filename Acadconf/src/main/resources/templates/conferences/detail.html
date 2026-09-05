@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Détail Conférence')}"></head>
+<body class="bg-[#faf9fc] font-sans text-[#1a1c1e]">
+<nav th:replace="~{fragments/layout :: sidebar('conferences')}"></nav>
+<header th:replace="~{fragments/layout :: topbar(${user})}"></header>
+<main class="ml-[220px] mt-[64px] p-gutter min-h-[calc(100vh-64px)]">
+<div class="max-w-container_max_width mx-auto flex flex-col gap-6 pb-12">
+
+  <!-- Conference Header Card -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-label-caps text-label-caps px-2 py-0.5 bg-primary-container text-on-primary-container rounded"
+                th:text="${conference.sigle ?: 'CONF'}"></span>
+          <span th:switch="${conference.statut.name()}">
+            <span th:case="'OUVERTE'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-fixed text-on-primary-fixed">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>Ouverte
+            </span>
+            <span th:case="'FERMEE'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary-container text-on-secondary-container">Fermée</span>
+            <span th:case="'EN_EVALUATION'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-surface-tint/20 text-surface-tint">En évaluation</span>
+            <span th:case="'TERMINEE'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-outline-variant/50 text-on-surface-variant">Terminée</span>
+          </span>
+        </div>
+        <h1 class="font-h1 text-h1 text-on-surface" th:text="${conference.titre}">Titre de la conférence</h1>
+        <p class="font-body-base text-body-base text-on-surface-variant" th:if="${conference.description}" th:text="${conference.description}"></p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col gap-2 shrink-0">
+        <a th:if="${conference.statut.name() == 'OUVERTE'}"
+           sec:authorize="hasRole('AUTEUR')"
+           th:href="@{/articles/submit(conferenceId=${conference.id})}"
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-h3 text-h3 hover:bg-primary/90 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">upload_file</span>
+          Soumettre un article
+        </a>
+        <a sec:authorize="hasAnyRole('PRESIDENT','ADMIN')"
+           th:href="@{/affectations/{id}(id=${conference.id})}"
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg font-h3 text-h3 hover:bg-primary/10 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+          Gérer les affectations
+        </a>
+        <a sec:authorize="hasAnyRole('PRESIDENT','ADMIN')"
+           th:href="@{/conferences/{id}/edit(id=${conference.id})}"
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-h3 text-h3 hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          Modifier
+        </a>
+      </div>
+    </div>
+
+    <!-- Dates Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-outline-variant/50 pt-4 mt-2">
+      <div th:if="${conference.dateDebut != null}" class="flex flex-col gap-1">
+        <span class="font-label-caps text-label-caps text-on-surface-variant">Début</span>
+        <span class="font-body-sm text-on-surface" th:text="${#temporals.format(conference.dateDebut,'dd MMM yyyy')}">—</span>
+      </div>
+      <div th:if="${conference.dateFin != null}" class="flex flex-col gap-1">
+        <span class="font-label-caps text-label-caps text-on-surface-variant">Fin</span>
+        <span class="font-body-sm text-on-surface" th:text="${#temporals.format(conference.dateFin,'dd MMM yyyy')}">—</span>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="font-label-caps text-label-caps text-on-surface-variant">Deadline soumission</span>
+        <span class="font-body-sm font-semibold text-error" th:text="${#temporals.format(conference.dateLimiteSoumission,'dd MMM yyyy')}">—</span>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="font-label-caps text-label-caps text-on-surface-variant">Deadline évaluation</span>
+        <span class="font-body-sm font-semibold text-on-surface" th:text="${#temporals.format(conference.dateLimiteEvaluation,'dd MMM yyyy')}">—</span>
+      </div>
+    </div>
+
+    <!-- Themes -->
+    <div th:if="${conference.themes != null and !conference.themes.isEmpty()}" class="flex flex-col gap-2 border-t border-outline-variant/50 pt-4">
+      <span class="font-label-caps text-label-caps text-on-surface-variant">THÈMES</span>
+      <p class="font-body-sm text-on-surface" th:text="${conference.themes}"></p>
+    </div>
+  </div>
+
+  <!-- Articles for this conference (admin/president) -->
+  <div sec:authorize="hasAnyRole('PRESIDENT','ADMIN','RELECTEUR')">
+    <div th:if="${conference.articles != null and !conference.articles.isEmpty()}"
+         class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+      <div class="px-5 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+        <h2 class="font-h3 text-h3 text-on-surface">Articles soumis</h2>
+        <span class="font-body-sm text-body-sm text-on-surface-variant" th:text="${conference.articles.size() + ' article(s)'}">0</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant">
+              <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">TITRE</th>
+              <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">AUTEUR</th>
+              <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">DATE</th>
+              <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">STATUT</th>
+              <th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="a : ${conference.articles}" class="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
+              <td class="py-3 px-4 max-w-[240px]">
+                <a th:href="@{/articles/{id}(id=${a.id})}"
+                   class="font-body-sm text-on-surface hover:text-primary hover:underline truncate block"
+                   th:text="${#strings.abbreviate(a.titre, 55)}">Titre</a>
+              </td>
+              <td class="py-3 px-4 font-body-sm text-on-surface" th:text="${a.auteurPrincipal.nomComplet}"></td>
+              <td class="py-3 px-4 font-body-sm text-on-surface-variant" th:text="${#temporals.format(a.dateSoumission,'dd MMM yyyy')}"></td>
+              <td class="py-3 px-4">
+                <span th:switch="${a.statutArticle.name()}">
+                  <span th:case="'SOUMIS'" class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary-container text-on-secondary-container">Soumis</span>
+                  <span th:case="'EN_EVALUATION'" class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-fixed/40 text-primary">En évaluation</span>
+                  <span th:case="'ACCEPTE'" class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-fixed text-on-primary-fixed">Accepté</span>
+                  <span th:case="'REJETE'" class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-error-container text-error">Rejeté</span>
+                </span>
+              </td>
+              <td class="py-3 px-4">
+                <a th:href="@{/articles/{id}(id=${a.id})}"
+                   class="inline-flex items-center gap-1 px-3 py-1 rounded border border-outline-variant text-body-sm text-on-surface-variant hover:text-primary hover:border-primary transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>Voir
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div th:if="${conference.articles == null or conference.articles.isEmpty()}"
+         class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8 text-center">
+      <span class="material-symbols-outlined text-[48px] text-outline-variant block mb-2">inbox</span>
+      <p class="font-body-sm text-on-surface-variant">Aucun article soumis pour cette conférence.</p>
+    </div>
+  </div>
+
+</div>
+</main>
+</body>
+</html>
