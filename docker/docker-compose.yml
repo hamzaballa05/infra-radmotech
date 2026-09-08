@@ -21,6 +21,7 @@ services:
   app:
     build:
       context: ../Acadconf
+    restart: unless-stopped
     environment:
       MYSQLHOST: db
       MYSQLPORT: 3306

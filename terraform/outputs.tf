@@ -7,3 +7,7 @@ output "instance_name" {
   description = "Nom de l'instance créée"
   value       = openstack_compute_instance_v2.app.name
 }
+output "db_password" {
+  value     = random_password.db_password.result
+  sensitive = true
+} 

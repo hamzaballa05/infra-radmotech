@@ -46,6 +46,16 @@ sshd -t
 systemctl restart ssh
 sshd -T | grep -Ei 'passwordauthentication|permitrootlogin'
 
+
+
+
+
 # --- Bloc 6 : recuperation du projet et premier deploiement ---
 git clone https://github.com/hamzaballa05/infra-radmotech.git /opt/infra
-cd /opt/infra/docker && docker compose up -d
+
+mkdir -p /opt/infra/docker/secrets
+echo -n "${db_password}" > /opt/infra/docker/secrets/db_password.txt
+chmod 600 /opt/infra/docker/secrets/db_password.txt
+
+export DB_PASSWORD=$(cat /opt/infra/docker/secrets/db_password.txt)
+cd /opt/infra/docker && docker compose up -d --build
