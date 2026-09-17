@@ -58,7 +58,10 @@ echo -n "${db_password}" > /opt/infra/docker/secrets/db_password.txt
 chmod 600 /opt/infra/docker/secrets/db_password.txt
 
 export DB_PASSWORD=$(cat /opt/infra/docker/secrets/db_password.txt)
-cd /opt/infra/docker && docker compose up -d --build
+cd /opt/infra/docker && docker compose up -d --build vault
 
 # --- Bloc 7 : mise en place de l'automatisation Vault (auto-init/unseal) ---
 bash /opt/infra/docker/vault/install-vault-service.sh
+
+# --- Bloc 8 : demarrage des services applicatifs, une fois Vault pret ---
+cd /opt/infra/docker && docker compose up -d db app nginx
