@@ -1,0 +1,14 @@
+[Unit]
+Description=Vault auto-unseal au demarrage
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/infra/docker
+ExecStartPre=/usr/bin/docker compose up -d vault
+ExecStart=/bin/bash /opt/infra/docker/vault/vault-bootstrap.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

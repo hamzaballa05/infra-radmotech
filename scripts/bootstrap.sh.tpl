@@ -7,7 +7,7 @@ apt-get update -y
 apt-get upgrade -y
 
 # --- Bloc 3 : installation de Docker (depot officiel + cle GPG) ---
-apt-get install -y ca-certificates curl gnupg git
+apt-get install -y ca-certificates curl gnupg git jq
 
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -59,3 +59,6 @@ chmod 600 /opt/infra/docker/secrets/db_password.txt
 
 export DB_PASSWORD=$(cat /opt/infra/docker/secrets/db_password.txt)
 cd /opt/infra/docker && docker compose up -d --build
+
+# --- Bloc 7 : mise en place de l'automatisation Vault (auto-init/unseal) ---
+bash /opt/infra/docker/vault/install-vault-service.sh
