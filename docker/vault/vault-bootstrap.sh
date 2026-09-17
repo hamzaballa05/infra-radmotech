@@ -25,7 +25,8 @@ if [ -f "$INIT_FILE" ]; then
   echo "Vault deja initialise sur cette instance -- descellement uniquement."
 else
   echo "Premiere initialisation de Vault sur cette instance."
-  docker compose exec -T vault vault operator init -format=json > "$INIT_FILE"
+  INIT_OUTPUT=$(docker compose exec -T vault vault operator init -format=json)
+  echo "$INIT_OUTPUT" > "$INIT_FILE"
   chmod 600 "$INIT_FILE"
 fi
 
@@ -36,8 +37,7 @@ for attempt in $(seq 1 5); do
     docker compose exec -T vault vault operator unseal "$key" >/dev/null
   done <<< "$UNSEAL_KEYS"
 
-  SEALED_STATUS=$(docker compose exec -T vault vault status -format=json 2>/dev/null | jq -r '.sealed')
-
+SEALED_STATUS=$(docker compose exec -T vault vault status -format=json 2>/dev/null | jq -r '.sealed' || echo "")
   if [ "$SEALED_STATUS" = "false" ]; then
     echo "Vault descelle avec succes (tentative $attempt)."
     break
