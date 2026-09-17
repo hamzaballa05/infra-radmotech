@@ -30,12 +30,12 @@ else
   chmod 600 "$INIT_FILE"
 fi
 
-UNSEAL_KEYS=$(jq -r '.unseal_keys_b64[0:3][]' "$INIT_FILE")
+mapfile -t UNSEAL_KEYS_ARRAY < <(jq -r '.unseal_keys_b64[0:3][]' "$INIT_FILE")
 
 for attempt in $(seq 1 5); do
-  while IFS= read -r key; do
+  for key in "${UNSEAL_KEYS_ARRAY[@]}"; do
     docker compose exec -T vault vault operator unseal "$key" >/dev/null
-  done <<< "$UNSEAL_KEYS"
+  done
 
 SEALED_STATUS=$(docker compose exec -T vault vault status -format=json 2>/dev/null | jq -r '.sealed' || echo "")
   if [ "$SEALED_STATUS" = "false" ]; then
