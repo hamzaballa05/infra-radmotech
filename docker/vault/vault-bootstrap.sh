@@ -30,9 +30,27 @@ else
 fi
 
 UNSEAL_KEYS=$(jq -r '.unseal_keys_b64[0:3][]' "$INIT_FILE")
-while IFS= read -r key; do
-  docker compose exec -T vault vault operator unseal "$key" >/dev/null
-done <<< "$UNSEAL_KEYS"
+
+for attempt in $(seq 1 5); do
+  while IFS= read -r key; do
+    docker compose exec -T vault vault operator unseal "$key" >/dev/null
+  done <<< "$UNSEAL_KEYS"
+
+  SEALED_STATUS=$(docker compose exec -T vault vault status -format=json 2>/dev/null | jq -r '.sealed')
+
+  if [ "$SEALED_STATUS" = "false" ]; then
+    echo "Vault descelle avec succes (tentative $attempt)."
+    break
+  fi
+
+  echo "Vault toujours scelle apres tentative $attempt, nouvel essai dans 5s..."
+  sleep 5
+done
+
+if [ "$SEALED_STATUS" != "false" ]; then
+  echo "ERREUR : impossible de desceller Vault apres 5 tentatives" >&2
+  exit 1
+fi
 
 ROOT_TOKEN=$(jq -r '.root_token' "$INIT_FILE")
 
