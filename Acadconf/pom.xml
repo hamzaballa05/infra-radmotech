@@ -105,6 +105,9 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Flaway -->
+       
+        
     </dependencies>
 
     <build>

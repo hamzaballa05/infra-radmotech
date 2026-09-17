@@ -17,7 +17,11 @@ COPY src ./src
 #9
 RUN mvn package -DskipTests -q
 
-###################
+
+
+############################################################
+
+
 
 # 2
 FROM eclipse-temurin:21-jre-alpine 
@@ -25,6 +29,11 @@ FROM eclipse-temurin:21-jre-alpine
 # 3
 WORKDIR /app 
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && mkdir -p /tmp/uploads \
+    && chown -R appuser:appgroup /tmp/uploads /app
+
+    
 # 4 
 RUN mkdir -p /tmp/uploads
 
