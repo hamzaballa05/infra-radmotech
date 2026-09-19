@@ -44,10 +44,7 @@ chmod 0755 /run/sshd
 
 sshd -t
 systemctl restart ssh
-sshd -T | grep -Ei 'passwordauthentication|permitrootlogin'
-
-
-
+sshd -T | grep -Ei 'passwordauthentication|permitrootlogin' || true
 
 
 # --- Bloc 6 : recuperation du projet et premier deploiement ---
@@ -57,8 +54,7 @@ mkdir -p /opt/infra/docker/secrets
 echo -n "${db_password}" > /opt/infra/docker/secrets/db_password.txt
 chmod 600 /opt/infra/docker/secrets/db_password.txt
 
-export DB_PASSWORD=$(cat /opt/infra/docker/secrets/db_password.txt)
-cd /opt/infra/docker && docker compose up -d --build vault
+cd /opt/infra/docker && docker compose up -d vault
 
 # --- Bloc 7 : mise en place de l'automatisation Vault (auto-init/unseal) ---
 bash /opt/infra/docker/vault/install-vault-service.sh
