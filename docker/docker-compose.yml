@@ -45,6 +45,15 @@ services:
     networks:
       - monitoring
 
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+
 
   db:
     image: mysql:8.0
@@ -125,7 +134,8 @@ volumes:
   db_data:
   uploads_data:
   vault_data:
-
+  prometheus_data:
+  
 networks:
   backend:
     driver: bridge
