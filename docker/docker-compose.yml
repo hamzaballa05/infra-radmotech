@@ -69,6 +69,8 @@ services:
     networks:
       - backend
       - frontend
+      - monitoring
+      
 
 
 
@@ -101,4 +103,6 @@ networks:
   backend:
     driver: bridge
   frontend:
+    driver: bridge
+  monitoring:
     driver: bridge
