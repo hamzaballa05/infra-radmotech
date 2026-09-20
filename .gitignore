@@ -1,4 +1,5 @@
 docker/secrets/
+docker/vault/init-keys.json
 
 # Terraform
 terraform/.terraform/

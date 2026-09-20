@@ -6,6 +6,10 @@ resource "random_password" "db_password" {
   length  = 24
   special = false
 }
+resource "random_password" "grafana_password" {
+  length  = 24
+  special = false
+}
 resource "openstack_compute_instance_v2" "app" {
   name            = var.instance_name
   image_name      = var.image_name

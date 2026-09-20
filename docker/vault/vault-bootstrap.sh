@@ -67,4 +67,18 @@ else
   echo "Token applicatif deja present -- rien a reconfigurer."
 fi
 
+GRAFANA_TOKEN_FILE="/opt/infra/docker/secrets/vault_grafana_token.txt"
+
+if [ ! -f "$GRAFANA_TOKEN_FILE" ]; then
+  echo "Configuration initiale du secret Grafana et de sa policy..."
+  GRAFANA_PASSWORD_VALUE=$(cat /opt/infra/docker/secrets/grafana_password.txt)
+  docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault kv put acadconf/grafana_password value="$GRAFANA_PASSWORD_VALUE"
+  docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault policy write grafana-reader /vault/config/grafana-read-policy.hcl
+  docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault token create -type=service -policy="grafana-reader" -ttl=768h -display-name="grafana-service" -field=token > "$GRAFANA_TOKEN_FILE"
+  chmod 600 "$GRAFANA_TOKEN_FILE"
+  echo "Vault (Grafana) entierement configure."
+else
+  echo "Token Grafana deja present -- rien a reconfigurer."
+fi
+
 echo "Vault pret."

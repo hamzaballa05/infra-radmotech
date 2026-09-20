@@ -32,13 +32,11 @@ ufw --force enable
 sed -Ei 's/^#?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -Ei 's/^#?[[:space:]]*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 
-# Neutraliser le reglage cloud-init s'il existe
 if [ -f /etc/ssh/sshd_config.d/50-cloud-init.conf ]; then
     sed -Ei 's/^#?[[:space:]]*PasswordAuthentication.*/PasswordAuthentication no/' \
         /etc/ssh/sshd_config.d/50-cloud-init.conf
 fi
 
-# Fix : dossier de separation de privileges de sshd, pas toujours recree
 mkdir -p /run/sshd
 chmod 0755 /run/sshd
 
@@ -54,10 +52,13 @@ mkdir -p /opt/infra/docker/secrets
 echo -n "${db_password}" > /opt/infra/docker/secrets/db_password.txt
 chmod 600 /opt/infra/docker/secrets/db_password.txt
 
+echo -n "${grafana_password}" > /opt/infra/docker/secrets/grafana_password.txt
+chmod 600 /opt/infra/docker/secrets/grafana_password.txt
+
 cd /opt/infra/docker && docker compose up -d vault
 
 # --- Bloc 7 : mise en place de l'automatisation Vault (auto-init/unseal) ---
 bash /opt/infra/docker/vault/install-vault-service.sh
 
-# --- Bloc 8 : demarrage des services applicatifs, une fois Vault pret ---
-cd /opt/infra/docker && docker compose up -d db app nginx
+# --- Bloc 8 : demarrage de tous les services applicatifs et de monitoring ---
+cd /opt/infra/docker && docker compose up -d
