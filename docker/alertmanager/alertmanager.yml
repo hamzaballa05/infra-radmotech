@@ -1,0 +1,10 @@
+route:
+  receiver: 'email-mailhog'
+
+receivers:
+  - name: 'email-mailhog'
+    email_configs:
+      - to: 'admin@acadconf.ma'
+        from: 'alertmanager@acadconf.ma'
+        smarthost: 'mailhog:1025'
+        require_tls: false

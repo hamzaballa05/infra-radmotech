@@ -1,0 +1,18 @@
+groups:
+  - name: alertes_infrastructure
+    rules:
+      - alert: AppInjoignable
+        expr: up{job="app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'application app est injoignable depuis 1 minute"
+
+      - alert: DisquePresquePlein
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Moins de 15% d'espace disque disponible"
