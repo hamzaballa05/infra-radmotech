@@ -59,13 +59,21 @@ services:
   grafana:
     image: grafana/grafana:11.3.1
     restart: unless-stopped
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: "ChangeMoiPlusTard123!"
+    entrypoint: ["/vault/fetch-grafana-secret.sh"]
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./vault/fetch-grafana-secret.sh:/vault/fetch-grafana-secret.sh:ro
+    secrets:
+      - vault_grafana_token
+    depends_on:
+      vault:
+        condition: service_healthy
     networks:
       - monitoring
       - frontend
+      - backend
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
