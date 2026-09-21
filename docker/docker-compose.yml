@@ -65,6 +65,8 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./vault/fetch-grafana-secret.sh:/vault/fetch-grafana-secret.sh:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     secrets:
       - vault_grafana_token
     depends_on:
