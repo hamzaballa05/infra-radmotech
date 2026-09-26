@@ -19,8 +19,17 @@ resource "openstack_compute_instance_v2" "app" {
   user_data = templatefile("${path.module}/../scripts/bootstrap.sh.tpl", {
     db_password       = random_password.db_password.result
     grafana_password  = random_password.grafana_password.result
-})
+  })
   network {
     name = "Ext-Net"
   }
+}
+
+resource "ovh_cloud_project_workflow_backup" "acadconf_backup" {
+  service_name = var.service_name
+  region_name  = "AF-NORTH-LZ-RBA-A"
+  instance_id  = openstack_compute_instance_v2.app.id
+  name         = "backup-acadconf"
+  rotation     = 7
+  cron         = "0 3 * * *"
 }
