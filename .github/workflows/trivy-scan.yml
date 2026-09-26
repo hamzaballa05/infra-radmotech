@@ -1,0 +1,25 @@
+name: Trivy Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build de l'image AcadConf
+        run: docker build -t acadconf:scan ./Acadconf
+
+      - name: Scan Trivy de l'image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: acadconf:scan
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 0
