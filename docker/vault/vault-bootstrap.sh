@@ -61,7 +61,7 @@ if [ ! -f "$TOKEN_FILE" ]; then
   docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault kv put acadconf/db_password value="$DB_PASSWORD_VALUE"
   docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault policy write db-reader /vault/config/db-read-policy.hcl
   docker compose exec -T -e VAULT_TOKEN="$ROOT_TOKEN" vault vault token create -type=service -policy="db-reader" -ttl=768h -display-name="acadconf-services" -field=token > "$TOKEN_FILE"
-  chmod 600 "$TOKEN_FILE"
+  chmod 644 "$TOKEN_FILE"
   echo "Vault entierement configure."
 else
   echo "Token applicatif deja present -- rien a reconfigurer."
