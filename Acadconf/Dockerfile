@@ -39,6 +39,7 @@ RUN mkdir -p /tmp/uploads
 
 #10
 COPY --from=build /app/target/acadconf-1.0.0.jar app.jar
+USER appuser
 
 
 EXPOSE 8080

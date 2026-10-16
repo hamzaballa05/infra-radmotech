@@ -36,7 +36,7 @@ L'infrastructure est déployée sur **OVHcloud (Local Zone Rabat)** afin de gara
 │   └── deploy.sh                       # Redéploiement (mises à jour)
 │
 ├── docker/
-│   ├── docker-compose.yml              # Orchestration des 9 services
+│   ├── docker-compose.yml              # Orchestration des 10 services
 │   ├── secrets/                        # Secrets générés au runtime (ignoré par Git)
 │   ├── vault/
 │   │   ├── config.hcl                  # Configuration du serveur Vault
@@ -82,7 +82,7 @@ L'infrastructure applique le principe de défense en profondeur sur 3 couches :
 
 1. **Security Group OVH** : Bloque tout le trafic entrant au niveau réseau, sauf le port `80` (HTTP ouvert) et le port `22` (SSH restreint à l'IP de l'administrateur).
 2. **UFW (Uncomplicated Firewall)** : Configuré sur l'hôte au démarrage (mêmes règles).
-3. **Docker Networks** : Les services applicatifs (`app`, `db`, `vault`, etc.) n'exposent aucun port sur l'hôte, hormis `nginx`. L'accès aux outils d'administration se fait exclusivement via tunnel SSH.
+3. **Docker Networks** : Les services applicatifs (`app`, `db`, `vault`, etc.) n'exposent aucun port sur l'hôte, hormis `nginx` (port 80) et deux outils d'administration liés à l'adresse de bouclage `127.0.0.1` : Grafana (`3000`) et MailHog (`8025`). Ces deux outils ne sont donc pas joignables depuis Internet ; on y accède exclusivement via tunnel SSH.
 
 ## ⚙️ Prérequis
 
@@ -139,10 +139,10 @@ ssh -L 3000:localhost:3000 -L 8025:localhost:8025 ubuntu@<IP_PUBLIQUE>
 Connectez-vous en SSH à l'instance, puis exécutez :
 ```bash
 # Pour Grafana
-docker compose -f /opt/infra/docker/docker-compose.yml exec vault vault kv get -field=grafana_password acadconf/grafana_password
+docker compose -f /opt/infra/docker/docker-compose.yml exec vault vault kv get -field=value acadconf/grafana_password
 
 # Pour MySQL
-docker compose -f /opt/infra/docker/docker-compose.yml exec vault vault kv get -field=db_password acadconf/db_password
+docker compose -f /opt/infra/docker/docker-compose.yml exec vault vault kv get -field=value acadconf/db_password
 ```
 
 ## 🔄 Cycle de vie (Mise à jour)
